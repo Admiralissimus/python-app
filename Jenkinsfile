@@ -8,4 +8,7 @@ node {
     stage('Docker_run'){
         sh 'docker run -d -p 8082:5000 prodpython'
     }
+    stage('Docker_run_hello'){
+        sh 'docker run -d -p 8082:5000 postgres'
+    }
 }
