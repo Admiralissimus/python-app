@@ -1,3 +1,5 @@
+def dockerRun = "docker run -d -p 8081:5000 ambarodzich/docker-app:$BUILD_NUMBER"
+
 pipeline {
     agent any
 
@@ -9,7 +11,7 @@ pipeline {
         }
         stage('Docker_Build') {
             steps {
-               sh 'docker build -t \'ambarodzich/docker-app:v1\' .' 
+                sh 'docker build -t ambarodzich/docker-app:$BUILD_NUMBER .'   
             }
         }
         stage('Docker_Push') {
@@ -17,12 +19,14 @@ pipeline {
                 withCredentials([string(credentialsId: 'DockerHubPwd', variable: 'DockerHubPwd')]) {
                     sh "docker login -u ambarodzich -p $DockerHubPwd"
                 }
-                sh 'docker push \'ambarodzich/docker-app:v1\'' 
+                sh 'docker push ambarodzich/docker-app:$BUILD_NUMBER'   
             }
         }
         stage('Deploy') {
             steps {
-               sh 'docker run -p 8081:5000 -d \'ambarodzich/docker-app:v1\'' 
+                sshagent(['devserver']) {
+                    sh "ssh -o StrictHostKeyChecking=no ubuntu@3.89.27.36 ${dockerRun}" 
+                }
             }
         }
     }
