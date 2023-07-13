@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello():
-    return "Website of .NET v2"
+    return "Website of .NET v2.1"
 
 
 if __name__ == "__main__":
