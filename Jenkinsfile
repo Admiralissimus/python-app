@@ -28,7 +28,7 @@ pipeline {
                 sshagent(['test_2']) {
                     sh '''
                         [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
-                        ssh-keyscan -t rsa,dsa 10.128.0.33 >> ~/.ssh/known_hosts
+                        ssh-keyscan -t rsa,dsa ${webServerIP} >> ~/.ssh/known_hosts
                         ssh ubuntu@${webServerIP} docker rm -f python-web || true
                         ssh ubuntu@${webServerIP} docker pull admiralissimus/docker-web-python:latest
                         ssh ubuntu@${webServerIP} docker run --name python-web -p 8080:5000 -d admiralissimus/docker-web-python:latest
