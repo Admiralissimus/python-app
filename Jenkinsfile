@@ -1,7 +1,6 @@
 pipeline {
     agent {
-        label 'docker'
-        label 'linux'
+        label 'docker && linux'
     }
     environment {
         webServerIP = "10.128.0.33"
