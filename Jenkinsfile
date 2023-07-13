@@ -1,7 +1,10 @@
-def webServerIP = "10.128.0.33"
+#def webServerIP = "10.128.0.33"
 
 pipeline {
     agent any
+    environment {
+        webServerIP = "10.128.0.33"
+    }
 
     stages {
         stage('CheckoutSCM') {
