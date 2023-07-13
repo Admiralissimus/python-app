@@ -1,31 +1,38 @@
-def dockerRun = "docker run -d -p 8081:5000 ambarodzich/docker-app:$BUILD_NUMBER"
+def webServerIP = "10.128.0.33"
 
 pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
+        stage('CheckoutSCM') {
             steps {
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/AMBarodzich/pythonapp']])
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Admiralissimus/python-app.git']])
             }
         }
-        stage('Docker_Build') {
+        stage('DockerBuild') {
             steps {
-                sh 'docker build -t ambarodzich/docker-app:$BUILD_NUMBER .'   
+                sh 'docker build -t "admiralissimus/docker-web-python:v$BUILD_NUMBER" -t "admiralissimus/docker-web-python:latest" .'
             }
         }
-        stage('Docker_Push') {
+        stage('DockerPush') {
             steps {
-                withCredentials([string(credentialsId: 'DockerHubPwd', variable: 'DockerHubPwd')]) {
-                    sh "docker login -u ambarodzich -p $DockerHubPwd"
+                withCredentials([usernamePassword(credentialsId: 'DockerHubToken', passwordVariable: 'DockerHubPwd', usernameVariable: 'DockerHubUser')]) {
+                    sh 'docker login -u "$DockerHubUser" -p "$DockerHubPwd" '
                 }
-                sh 'docker push ambarodzich/docker-app:$BUILD_NUMBER'   
+                sh 'docker push "admiralissimus/docker-web-python:v$BUILD_NUMBER"'
+                sh 'docker push "admiralissimus/docker-web-python:latest"'
             }
         }
         stage('Deploy') {
             steps {
-                sshagent(['devserver']) {
-                    sh "ssh -o StrictHostKeyChecking=no ubuntu@3.89.27.36 ${dockerRun}" 
+                sshagent(['test_2']) {
+                    sh '''
+                        [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
+                        ssh-keyscan -t rsa,dsa 10.128.0.33 >> ~/.ssh/known_hosts
+                        ssh ubuntu@${webServerIP} docker rm -f python-web || true
+                        ssh ubuntu@${webServerIP} docker pull admiralissimus/docker-web-python:latest
+                        ssh ubuntu@${webServerIP} docker run --name python-web -p 8080:5000 -d admiralissimus/docker-web-python:latest
+                    '''
                 }
             }
         }
